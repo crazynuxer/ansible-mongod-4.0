@@ -1,0 +1,23 @@
+---
+
+- hosts: all
+  vars:
+    apt_cache_valid_time: 3600
+  roles:
+   - role: shared/apt_sources_list
+   - role: ../../mongodb-4.0
+     mongodb_repl_set_name: replicaA
+     mongodb_repl_oplog_size: 5120
+     mongodb_keyfile: "files/test-keyfile"
+  post_tasks:
+    - block:
+        - wait_for:
+            port: "{{ mongodb_port }}"
+        - shell: "grep 'initandlisten' {{ mongodb_logpath }} | tail -n 10"
+          register: log
+        - debug:
+            var: log.stdout_lines
+      tags:
+        - mongodb
+        - test
+
